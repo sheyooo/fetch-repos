@@ -1,0 +1,16 @@
+.star-btn {
+  border: none;
+  background: none;
+}
+
+.star-btn.star-light {
+  color: #999;
+}
+
+.star-btn.star-dark {
+  color: #222;
+}
+
+.filter-repo-text {
+  text-decoration: underline;
+}
