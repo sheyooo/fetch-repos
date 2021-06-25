@@ -2,20 +2,29 @@ import { getLanguages } from "../utils";
 
 const FilterLangSelect = ({ repos, reposById, onChange }) => {
   return (
-    <select
-      className="form-select"
-      aria-label="Filter by language"
-      onChange={onChange}
-    >
-      <option value="">All languages</option>
+    <form>
       {getLanguages(repos, reposById).map((lang) => {
         return (
-          <option key={lang} value={lang}>
-            {lang}
-          </option>
+          <div key={lang}>
+            <input
+              className="form-check-input"
+              type="checkbox"
+              value={lang}
+              id={lang}
+              onChange={(event) =>
+                onChange({
+                  lang: event.target.value,
+                  isChecked: event.target.checked,
+                })
+              }
+            />
+            <label className="form-check-label" htmlFor={lang}>
+              {lang}
+            </label>
+          </div>
         );
       })}
-    </select>
+    </form>
   );
 };
 

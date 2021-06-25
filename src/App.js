@@ -8,8 +8,12 @@ import FilterLangSelect from "./components/FilterLangSelect";
 import { fetchRepos, getVisibleRepos, makeDictionary } from "./utils";
 
 function App() {
-  const [languageFilter, setLanguageFilter] = useState(null);
+  const [languagesFilter, setLanguagesFilter] = useState({});
   const [showOnlyStarred, setShowOnlyStarred] = useState(false);
+  const [paginationData, setPaginationData] = useState({
+    perPage: 10,
+    page: 1,
+  });
 
   const [repos, setRepos] = useState([]);
   const [reposById, setReposById] = useState({});
@@ -17,13 +21,19 @@ function App() {
     JSON.parse(localStorage.getItem("starsById") || "{}")
   );
 
+  const addRepos = (res) => {
+    const fetchedRepos = makeDictionary(res.items);
+    const fetchedRepoIds = res.items.map((repo) => repo.id);
+
+    setReposById({ ...reposById, ...fetchedRepos });
+    // Make unique incase github sends a repo that was already on a previous page
+    setRepos([...new Set([...repos, ...fetchedRepoIds])]);
+  };
+
   // Fetcht Repos
   useEffect(() => {
-    fetchRepos()
-      .then((res) => {
-        setReposById(makeDictionary(res.items));
-        setRepos(res.items.map((repo) => repo.id));
-      })
+    fetchRepos(paginationData)
+      .then(addRepos)
       .catch((err) => {
         alert("Something went wrong! \n" + err.message);
       });
@@ -33,10 +43,20 @@ function App() {
     window.localStorage.setItem("starsById", JSON.stringify(starsById));
   }, [starsById]);
 
+  const onClickLoadMore = () => {
+    const newPageQuery = {
+      page: paginationData.page + 1,
+      perPage: paginationData.perPage,
+    };
+    fetchRepos(newPageQuery).then(addRepos);
+
+    setPaginationData(newPageQuery);
+  };
+
   const reposToView = getVisibleRepos({
     repos,
     reposById,
-    languageFilter,
+    languagesFilter,
     starsById,
     showOnlyStarred,
   });
@@ -52,7 +72,12 @@ function App() {
               <FilterLangSelect
                 repos={repos}
                 reposById={reposById}
-                onChange={(event) => setLanguageFilter(event.target.value)}
+                onChange={(ev) => {
+                  setLanguagesFilter({
+                    ...languagesFilter,
+                    [ev.lang]: ev.isChecked,
+                  });
+                }}
               />
             </div>
 
@@ -82,6 +107,13 @@ function App() {
               );
             })}
           </ul>
+
+          <button
+            className="btn btn-link filter-repo-text m-2"
+            onClick={() => onClickLoadMore()}
+          >
+            Load more
+          </button>
         </div>
       </div>
     </div>
